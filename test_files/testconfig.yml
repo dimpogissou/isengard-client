@@ -1,0 +1,27 @@
+ConfigName: Logging configuration name
+Directory: /Users/mtalbi/Desktop/Repositories/originals/isengard-server/test_files
+LogPattern: "\\[(?P<timestamp>%s)\\]\\[(?P<level>%s)\\]\\[(?P<code>%s)\\]\\s(?P<message>%s)"
+Definitions:
+  - Name: DatePattern
+    Pattern: "\\d{4}-\\d{2}-\\d{2}\\s\\d{2}:\\d{2}:\\d{2}\\.\\d{6}\\s[A-Z]{3}"
+  - Name: LogLevelPattern
+    Pattern: "ERROR|WARN|WARNING|INFO|DEBUG"
+  - Name: LogCodePattern
+    Pattern: "[0-9]+?"
+  - Name: LogMsgPattern
+    Pattern: ".*"
+Connectors:
+  - Name: s3Connector
+    Type: s3
+    Address: logs-bucket
+    Levels:
+      - DEBUG
+      - INFO
+      - WARNING
+      - ERROR
+  - Name: rollbarConnector
+    Type: rollbar
+    Address: www.rollbar.com/something
+    Levels:
+      - WARNING
+      - ERROR
