@@ -16,3 +16,6 @@
 
 # Test files
 test_files/**.txt
+
+# Binary main
+main
