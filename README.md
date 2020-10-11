@@ -13,13 +13,13 @@ A self-hosted logging and metrics collection system written in Go
 
 ## Env/Ops
 
-- [ ] Restructure project
-- [ ] Dockerise app
-- [ ] Docker-compose test configuration
+- [x] Restructure project
+- [ ] (WIP) Dockerise app
+- [ ] (WIP) Docker-compose test configuration
 - [ ] Setup CI
 
 ## Tests 
 - [ ] Unit
 - [ ] Integration
-- [ ] E2E
+- [x] E2E
 - [ ] Setup test coverage
