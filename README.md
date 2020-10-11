@@ -1,5 +1,5 @@
-# isengard-server
-A self-hosted logging and metrics collection system written in Go
+# isengard-client
+A logging files tail-and-dispatch client written in Go
 
 # To do
 
