@@ -46,9 +46,11 @@ func TestEndToEnd(t *testing.T) {
 	// timeout := time.After(3 * time.Second)
 	done := make(chan bool)
 
-	timeout := time.After(6 * time.Second)
+	timeoutSeconds := 6
+	timeout := time.After(time.Duration(timeoutSeconds) * time.Second)
 	var testDir = "./config_test_files"
 	var testLines = 5
+
 	var file = testSetup(testDir)
 	defer testTeardown(testDir)
 
@@ -62,7 +64,7 @@ func TestEndToEnd(t *testing.T) {
 	go TailDirectory(testDir, logs, sig)
 
 	func() {
-		time.Sleep(3 * time.Second)
+		time.Sleep(1 * time.Second)
 		for _ = range make([]int, testLines) {
 			file.WriteString(testLogLine)
 			file.WriteString("\n")
@@ -85,7 +87,7 @@ func TestEndToEnd(t *testing.T) {
 
 	select {
 	case <-timeout:
-		t.Fatal("Test didn't finish in time")
+		t.Fatalf("Test timed out after %v seconds", timeoutSeconds)
 	case <-done:
 	}
 

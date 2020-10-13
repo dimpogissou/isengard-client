@@ -1,5 +1,5 @@
 ConfigName: Logging configuration name
-Directory: /Users/mtalbi/Desktop/Repositories/originals/isengard-server/test_files
+Directory: "/build/test_files"
 LogPattern: "\\[(?P<timestamp>%s)\\]\\[(?P<level>%s)\\]\\[(?P<code>%s)\\]\\s(?P<message>%s)"
 Definitions:
   - Name: DatePattern
@@ -13,7 +13,10 @@ Definitions:
 Connectors:
   - Name: s3Connector
     Type: s3
-    Address: logs-bucket
+    Region: us-east-1
+    Endpoint: http://localstack:4572
+    KeyPrefix: test-application
+    Bucket: local-test-bucket
     Levels:
       - DEBUG
       - INFO
