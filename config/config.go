@@ -17,7 +17,7 @@ var format = logging.MustStringFormatter(
 	`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
 )
 
-var supportedConnectors = []string{"s3", "rollbar"}
+var SupportedConnectors = []string{"s3", "rollbar"}
 var supportedLevels = []string{"DEBUG", "INFO", "WARNING", "WARN", "ERROR"}
 
 type PatternConfig struct {
@@ -25,10 +25,15 @@ type PatternConfig struct {
 	Pattern string `yaml:"Pattern"`
 }
 
+// TODO -> Refactor configuration
 type Connector struct {
-	Name   string   `yaml:"Name"`
-	Type   string   `yaml:"Type"`
-	Levels []string `yaml:"Levels"`
+	Name      string   `yaml:"Name"`
+	Endpoint  string   `yaml:"Endpoint"`
+	KeyPrefix string   `yaml:"KeyPrefix"`
+	Bucket    string   `yaml:"Bucket"`
+	Region    string   `yaml:"Region"`
+	Type      string   `yaml:"Type"`
+	Levels    []string `yaml:"Levels"`
 }
 
 type YamlConfig struct {
@@ -60,7 +65,7 @@ func validateConfig(cfg YamlConfig) error {
 
 	// Assert Connectors have valid values
 	for _, connector := range cfg.Connectors {
-		if !stringInSlice(connector.Type, supportedConnectors) {
+		if !stringInSlice(connector.Type, SupportedConnectors) {
 			return errors.New(fmt.Sprintf("Invalid connector type: %s", connector.Type))
 		}
 		for _, level := range connector.Levels {
@@ -119,14 +124,9 @@ func stringInSlice(a string, list []string) bool {
 	return false
 }
 
-func ValidateAndLoadConfig() YamlConfig {
+func ValidateAndLoadConfig(path *string) YamlConfig {
 
-	cfgPath := os.Getenv("ISENGARD_CONFIG_FILE")
-	if cfgPath == "" {
-		log.Fatalf("ISENGARD_CONFIG_FILE environment variable not set")
-	}
-
-	cfg := readConfig(cfgPath)
+	cfg := readConfig(*path)
 	err := validateConfig(cfg)
 
 	if err != nil {

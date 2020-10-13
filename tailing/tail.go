@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"regexp"
 
 	"github.com/hpcloud/tail"
 	"github.com/op/go-logging"
@@ -15,22 +14,6 @@ var log = logging.MustGetLogger("main")
 var format = logging.MustStringFormatter(
 	`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
 )
-
-func ParseLine(l *tail.Line, re *regexp.Regexp) map[string]string {
-	match := re.FindStringSubmatch(l.Text)
-	if match == nil {
-		log.Warning("Wrongly formatted line, returning empty map")
-		return make(map[string]string)
-	} else {
-		paramsMap := make(map[string]string)
-		for i, name := range re.SubexpNames() {
-			if i > 0 && i <= len(match) {
-				paramsMap[name] = match[i]
-			}
-		}
-		return paramsMap
-	}
-}
 
 func TailDirectory(dir string, logsChannel chan *tail.Line, sigChannel chan os.Signal) chan *tail.Line {
 

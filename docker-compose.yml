@@ -1,2 +1,29 @@
-isengard:
-  build: .
+version: "3.3"
+services:
+  isengard:
+    container_name: isengard
+    build: .
+    volumes:
+    - "/tmp/localstack:/tmp/localstack"
+    - "./test_files:/build/test_files"
+    environment:
+    - AWS_DEFAULT_REGION=us-east-1
+    - AWS_SECRET_ACCESS_KEY=foo
+    - AWS_ACCESS_KEY_ID=bar
+
+  localstack:
+    container_name: localstack
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3
+      - DEFAULT_REGION=eu-west-1
+      - AWS_DEFAULT_REGION=eu-west-1
+      - HOSTNAME_EXTERNAL=localhost
+      - USE_SSL=false
+      - DATA_DIR=/tmp/localstack/data
+      - DEBUG=1
+    volumes:
+      - "/tmp/localstack:/tmp/localstack"
+      - ./.aws:/docker-entrypoint-init/aws.d

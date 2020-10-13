@@ -4,9 +4,7 @@ FROM golang:alpine
 ENV GO111MODULE=on \
     CGO_ENABLED=0 \
     GOOS=linux \
-    GOARCH=amd64 \
-    ISENGARD_CONFIG_FILE=./test_files/testconfig.yml
-
+    GOARCH=amd64
 
 # Move to working directory /build
 WORKDIR /build
@@ -32,4 +30,4 @@ RUN cp /build/main .
 EXPOSE 3000
 
 # Command to run when starting the container
-CMD ["/dist/main"]
+CMD ["/dist/main", "-config", "/build/testconfig.yml"]
