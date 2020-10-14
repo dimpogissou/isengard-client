@@ -6,14 +6,18 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/dimpogissou/isengard-server/config"
 	"github.com/dimpogissou/isengard-server/connectors"
+	"github.com/dimpogissou/isengard-server/logger"
 	"github.com/dimpogissou/isengard-server/tailing"
 	"github.com/hpcloud/tail"
 )
 
 func main() {
 
+	// Initialize logger
+	logger.InitLogger()
+
+	// Parse CLI argument pointing to configuration file
 	configPtr := flag.String("config", "", "Text to parse. (Required)")
 	flag.Parse()
 	if *configPtr == "" {
@@ -21,20 +25,24 @@ func main() {
 		os.Exit(1)
 	}
 
-	cfg := config.ValidateAndLoadConfig(configPtr)
+	// Validate and loads config
+	cfg := connectors.ValidateAndLoadConfig(configPtr)
 
+	// Create logs channel receiving all tailed loglines from the target directory
 	logsChannel := make(chan *tail.Line)
+
+	// Create signal channel listening to interrupt and termination signals
 	sigChannel := make(chan os.Signal)
 	signal.Notify(sigChannel, os.Interrupt, syscall.SIGTERM)
 
-	conns := []connectors.ConnectorInterface{}
-	for _, connCfg := range cfg.Connectors {
-		c := connectors.NewConnector(connCfg)
-		conns = append(conns, c)
+	// Create and start all connectors, and defer teardown operations
+	conns := connectors.GenerateConnectors(cfg)
+	for _, c := range conns {
 		c.Open()
 		defer c.Close()
 	}
 
+	// Tails all log files in directory and sends data to configured targets
 	for line := range tailing.TailDirectory(cfg.Directory, logsChannel, sigChannel) {
 		for _, conn := range conns {
 			go conn.Send(line)

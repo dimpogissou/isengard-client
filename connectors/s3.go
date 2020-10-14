@@ -10,17 +10,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/dimpogissou/isengard-server/config"
+	"github.com/dimpogissou/isengard-server/logger"
 	"github.com/hpcloud/tail"
 	uuid "github.com/nu7hatch/gouuid"
 )
 
 type S3Connector struct {
 	client *s3.S3
-	cfg    config.Connector
+	cfg    S3ConnectorConfig
 }
 
-func SetupS3Client(cfg config.Connector) *s3.S3 {
+// Sets up S3 client
+func SetupS3Client(cfg S3ConnectorConfig) *s3.S3 {
 	sessionPtr := session.Must(session.NewSession(&aws.Config{
 		S3ForcePathStyle:              aws.Bool(true),
 		CredentialsChainVerboseErrors: aws.Bool(true),
@@ -28,18 +29,19 @@ func SetupS3Client(cfg config.Connector) *s3.S3 {
 		Endpoint:                      aws.String(cfg.Endpoint),
 	}))
 	client := s3.New(sessionPtr, &aws.Config{})
-	log.Info("Created S3 client -->", client)
+	logger.Info(fmt.Sprintf("Created S3 client --> %v", &client))
 	return client
 }
 
 func (conn S3Connector) Open() {
-	log.Info("Starting S3 connector ...")
+	logger.Info("Starting S3 connector ...")
 }
 
 func (c S3Connector) Close() {
-	log.Info("Closing S3 connector ...")
+	logger.Info("Closing S3 connector ...")
 }
 
+// Parses a log line into a string map using the regex built from config
 func parseLine(l *tail.Line, re *regexp.Regexp) (map[string]string, error) {
 	match := re.FindStringSubmatch(l.Text)
 	if match == nil {
@@ -55,10 +57,11 @@ func parseLine(l *tail.Line, re *regexp.Regexp) (map[string]string, error) {
 	}
 }
 
-func (c S3Connector) s3PutObject(fileKey string, line *tail.Line) (*s3.PutObjectOutput, error) {
+// Puts a tailed line into the specified bucket
+func (c S3Connector) s3PutObject(bucket string, fileKey string, line *tail.Line) (*s3.PutObjectOutput, error) {
 
 	p := s3.PutObjectInput{
-		Bucket: aws.String(c.cfg.Bucket),
+		Bucket: aws.String(bucket),
 		Key:    aws.String(fileKey),
 		ACL:    aws.String("public-read"),
 		Body:   strings.NewReader(line.Text),
@@ -77,15 +80,15 @@ func (c S3Connector) Send(line *tail.Line) bool {
 	t := time.Now()
 	uuid, err := uuid.NewV4()
 	if err != nil {
-		log.Error("Failed generating UUID for S3 file, exiting Send function")
+		logger.Error("FailedCreatingUUID", "Failed generating UUID for S3 file, exiting Send function")
 		return false
 	}
 	fileName := fmt.Sprintf("%s/%d-%02d-%02dT%02d-%02d-%02d-%v",
 		c.cfg.KeyPrefix,
 		t.Year(), t.Month(), t.Day(),
 		t.Hour(), t.Minute(), t.Second(), uuid)
-	_, err = c.s3PutObject(fileName, line)
-	log.Info(fmt.Sprintf("Sending file '%s' to S3 bucket '%s'", fileName, c.cfg.Bucket))
+	_, err = c.s3PutObject(c.cfg.Bucket, fileName, line)
+	logger.Info(fmt.Sprintf("Sending file '%s' to S3 bucket '%s'", fileName, c.cfg.Bucket))
 	if err != nil {
 		return false
 	}

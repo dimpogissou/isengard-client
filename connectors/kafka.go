@@ -1,18 +1,18 @@
 package connectors
 
 import (
-	"github.com/dimpogissou/isengard-server/config"
+	"fmt"
+
+	"github.com/dimpogissou/isengard-server/logger"
 	"github.com/hpcloud/tail"
 )
 
-type KafkaConnector struct {
-	cfg config.Connector
-}
+type KafkaConnector struct{}
 
 func (c KafkaConnector) Open()  {}
 func (c KafkaConnector) Close() {}
 
 func (c KafkaConnector) Send(line *tail.Line) bool {
-	log.Warning("Sending line to Kafka -->", line)
+	logger.Info(fmt.Sprintf("Sending line to Kafka --> %v", line))
 	return true
 }

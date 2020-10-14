@@ -10,8 +10,8 @@ Definitions:
     Pattern: "[0-9]+?"
   - Name: LogMsgPattern
     Pattern: ".*"
-Connectors:
-  - Name: s3Connector
+S3Connectors:
+  - Name: testS3Connector
     Type: s3
     Region: us-east-1
     Endpoint: http://localstack:4572
@@ -22,9 +22,10 @@ Connectors:
       - INFO
       - WARNING
       - ERROR
-  - Name: rollbarConnector
+RollbarConnectors:
+  - Name: testRollbarConnector
     Type: rollbar
-    Address: www.rollbar.com/something
+    Url: www.rollbar.com/something
     Levels:
       - WARNING
       - ERROR

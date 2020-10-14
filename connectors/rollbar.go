@@ -1,20 +1,20 @@
 package connectors
 
 import (
-	"github.com/dimpogissou/isengard-server/config"
+	"fmt"
+
+	"github.com/dimpogissou/isengard-server/logger"
 	"github.com/hpcloud/tail"
 )
 
-type RollbarConnector struct {
-	cfg config.Connector
-}
+type RollbarConnector struct{ cfg RollbarConnectorConfig }
 
 func (c RollbarConnector) Open() {
-	log.Info("Starting Rollbar connector ...")
+	logger.Info("Starting Rollbar connector ...")
 }
 func (c RollbarConnector) Close() {}
 
 func (c RollbarConnector) Send(line *tail.Line) bool {
-	log.Warning("Sending line to Rollbar -->", line)
+	logger.Info(fmt.Sprintf("Sending line to Rollbar --> %v", line))
 	return true
 }

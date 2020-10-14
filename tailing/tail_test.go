@@ -18,11 +18,13 @@ func check(e error) {
 	}
 }
 
+// Creates an empty file to write into
 func createEmptyFile(name string) {
 	d := []byte("")
 	check(ioutil.WriteFile(name, d, 0644))
 }
 
+// Test setup function
 func testSetup(dir string) *os.File {
 
 	// Create directory
@@ -36,12 +38,14 @@ func testSetup(dir string) *os.File {
 	return emptyFile
 }
 
+// Test teardown function
 func testTeardown(dir string) {
 	// Delete directory and files
 	os.RemoveAll(dir)
 }
 
-func TestEndToEnd(t *testing.T) {
+// Core test method of tailing functionality. Creates a test directory, starts tailing it and asserts generated log lines are correctly received
+func TestTailDirectory(t *testing.T) {
 
 	// timeout := time.After(3 * time.Second)
 	done := make(chan bool)
