@@ -22,8 +22,6 @@ services:
       - AWS_DEFAULT_REGION=eu-west-1
       - HOSTNAME_EXTERNAL=localhost
       - USE_SSL=false
-      - DATA_DIR=/tmp/localstack/data
       - DEBUG=1
     volumes:
-      - "/tmp/localstack:/tmp/localstack"
       - ./.aws:/docker-entrypoint-init/aws.d
