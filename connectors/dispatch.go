@@ -1,15 +1,7 @@
 package connectors
 
 import (
-	"github.com/dimpogissou/isengard-server/config"
 	"github.com/hpcloud/tail"
-	"github.com/op/go-logging"
-)
-
-var log = logging.MustGetLogger("main")
-
-var format = logging.MustStringFormatter(
-	`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
 )
 
 type ConnectorInterface interface {
@@ -18,17 +10,18 @@ type ConnectorInterface interface {
 	Close()
 }
 
-// Connectors factory using ConnectorInterface
-func NewConnector(cfg config.Connector) ConnectorInterface {
+// Create all connectors
+func GenerateConnectors(cfg YamlConfig) []ConnectorInterface {
 
-	switch connType := cfg.Type; connType {
-	case "s3":
-		return S3Connector{cfg: cfg, client: SetupS3Client(cfg)}
-	case "rollbar":
-		return RollbarConnector{cfg: cfg}
-	case "kafka":
-		return KafkaConnector{cfg: cfg}
-	default:
-		panic("Invalid connector type received in NewConnector function, should have been caught at configuration parsing !")
+	conns := []ConnectorInterface{}
+
+	for _, connCfg := range cfg.S3Connectors {
+		conns = append(conns, S3Connector{cfg: connCfg, client: SetupS3Client(connCfg)})
 	}
+
+	for _, connCfg := range cfg.RollbarConnectors {
+		conns = append(conns, RollbarConnector{cfg: connCfg})
+	}
+
+	return conns
 }
