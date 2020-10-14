@@ -7,6 +7,7 @@ require (
 	github.com/hpcloud/tail v1.0.0
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
+	github.com/segmentio/kafka-go v0.4.5
 	golang.org/x/net v0.0.0-20201010224723-4f7140c49acb // indirect
 	golang.org/x/sys v0.0.0-20201009025420-dfb3f7c4e634 // indirect
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
