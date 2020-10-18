@@ -103,8 +103,11 @@ func deleteFilesAndBucket(client *s3.S3, bucket string, prefix string) {
 
 func TestWriteToS3(t *testing.T) {
 
-	const testEndpoint = "http://localstack:4572"
+	localstackEndpoint := "http://localstack"
+	localstackS3Port := "4572"
+	testEndpoint := fmt.Sprintf("%s:%s", localstackEndpoint, localstackS3Port)
 	testRegion := os.Getenv("AWS_DEFAULT_REGION")
+
 	const testBucket = "local-test-bucket"
 	const testKeyPrefix = "some/test/key"
 	const testString = "Log line"

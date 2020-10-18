@@ -7,7 +7,7 @@ services:
     - "/tmp/localstack:/tmp/localstack"
     - "./test_files:/build/test_files"
     environment:
-    - AWS_DEFAULT_REGION=us-east-1
+    - AWS_DEFAULT_REGION=eu-west-1
     - AWS_SECRET_ACCESS_KEY=foo
     - AWS_ACCESS_KEY_ID=bar
     - KAFKA_HOST=kafka-cluster
