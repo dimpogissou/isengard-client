@@ -16,12 +16,13 @@ import (
 )
 
 type S3Connector struct {
-	client *s3.S3
-	cfg    S3ConnectorConfig
+	session *session.Session
+	client  *s3.S3
+	cfg     S3ConnectorConfig
 }
 
 // Sets up S3 client
-func SetupS3Client(cfg S3ConnectorConfig) *s3.S3 {
+func SetupS3Client(cfg S3ConnectorConfig) (*session.Session, *s3.S3) {
 	sessionPtr := session.Must(session.NewSession(&aws.Config{
 		S3ForcePathStyle:              aws.Bool(true),
 		CredentialsChainVerboseErrors: aws.Bool(true),
@@ -30,7 +31,7 @@ func SetupS3Client(cfg S3ConnectorConfig) *s3.S3 {
 	}))
 	client := s3.New(sessionPtr, &aws.Config{})
 	logger.Info(fmt.Sprintf("Created S3 client --> %v", &client))
-	return client
+	return sessionPtr, client
 }
 
 func (conn S3Connector) Open() {

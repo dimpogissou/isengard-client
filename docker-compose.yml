@@ -10,6 +10,9 @@ services:
     - AWS_DEFAULT_REGION=us-east-1
     - AWS_SECRET_ACCESS_KEY=foo
     - AWS_ACCESS_KEY_ID=bar
+    - KAFKA_HOST=kafka-cluster
+    - KAFKA_PORT=19092
+    - KAFKA_TOPIC=test-kafka-topic
 
   localstack:
     container_name: localstack
@@ -41,7 +44,7 @@ services:
       - ./zk-single-kafka-single/zookeeper/datalog:/datalog
 
   kafka:
-    container_name: kafka
+    container_name: kafka-cluster
     image: confluentinc/cp-kafka:5.5.1
     hostname: kafka-cluster
     ports:

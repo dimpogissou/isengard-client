@@ -16,7 +16,8 @@ func GenerateConnectors(cfg YamlConfig) []ConnectorInterface {
 	conns := []ConnectorInterface{}
 
 	for _, connCfg := range cfg.S3Connectors {
-		conns = append(conns, S3Connector{cfg: connCfg, client: SetupS3Client(connCfg)})
+		session, client := SetupS3Client(connCfg)
+		conns = append(conns, S3Connector{cfg: connCfg, session: session, client: client})
 	}
 
 	for _, connCfg := range cfg.RollbarConnectors {
