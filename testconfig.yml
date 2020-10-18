@@ -29,3 +29,15 @@ RollbarConnectors:
     Levels:
       - WARNING
       - ERROR
+KafkaConnectors:
+  - Name: testKafkaConnector
+    Type: kafka
+    Host: localhost
+    Port: 9092
+    Topic: test-kafka-topic
+    Levels:
+      - DEBUG
+      - INFO
+      - WARNING
+      - ERROR
+      

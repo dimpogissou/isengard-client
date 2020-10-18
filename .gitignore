@@ -20,3 +20,7 @@ test_files/**.txt
 # Compiled files
 main
 isengard-server
+
+# Docker volumes
+zk-single-kafka-single
+.aws
