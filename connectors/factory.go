@@ -5,8 +5,7 @@ import (
 )
 
 type ConnectorInterface interface {
-	Open()
-	Send(line *tail.Line) bool
+	Send(line *tail.Line) error
 	Close()
 }
 
@@ -22,6 +21,11 @@ func GenerateConnectors(cfg YamlConfig) []ConnectorInterface {
 
 	for _, connCfg := range cfg.RollbarConnectors {
 		conns = append(conns, RollbarConnector{cfg: connCfg})
+	}
+
+	for _, connCfg := range cfg.KafkaConnectors {
+		writer := SetupKafkaConnection(connCfg.Host, connCfg.Port, connCfg.Topic)
+		conns = append(conns, KafkaConnector{cfg: connCfg, writer: writer})
 	}
 
 	return conns

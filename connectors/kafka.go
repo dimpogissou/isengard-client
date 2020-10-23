@@ -3,7 +3,6 @@ package connectors
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/dimpogissou/isengard-server/logger"
 	"github.com/hpcloud/tail"
@@ -22,15 +21,17 @@ func SetupKafkaConnection(host string, port string, topic string) *kafka.Writer 
 	return writer
 }
 
-func CloseKafkaConnection(writer *kafka.Writer) {
+func CloseKafkaConnection(writer *kafka.Writer) error {
 
 	if err := writer.Close(); err != nil {
-		log.Fatal("failed to close writer:", err)
+		logger.Error("KafkaClosePublisherError:", err.Error())
+		return err
 	}
-
+	logger.Info("Closed Kafka publisher ...")
+	return nil
 }
 
-func (c KafkaConnector) writeKafkaMessages(key string, message string) {
+func (c KafkaConnector) writeKafkaMessages(key string, message string) error {
 
 	err := c.writer.WriteMessages(context.Background(),
 		kafka.Message{
@@ -38,9 +39,10 @@ func (c KafkaConnector) writeKafkaMessages(key string, message string) {
 			Value: []byte(message),
 		})
 	if err != nil {
-		log.Fatal("Failed to write message:", err)
+		return err
 	}
-
+	logger.Info(fmt.Sprintf("Successfully published message to Kafka at key [%s] -> %s", key, message))
+	return nil
 }
 
 type KafkaConnector struct {
@@ -48,17 +50,22 @@ type KafkaConnector struct {
 	writer *kafka.Writer
 }
 
-func (c KafkaConnector) Open() {
-}
 func (c KafkaConnector) Close() {
+	CloseKafkaConnection(c.writer)
 }
 
-func (c KafkaConnector) Send(line *tail.Line) bool {
-	logger.Info(fmt.Sprintf("Sending line to Kafka --> %v", line.Text))
+func (c KafkaConnector) Send(line *tail.Line) error {
+	logger.Debug(fmt.Sprintf("Sending line to Kafka --> %v", line.Text))
 	uuid, err := uuid.NewV4()
 	if err != nil {
-		return false
+		logger.Error("CreateUuidError", err.Error())
+		return err
 	}
-	c.writeKafkaMessages(fmt.Sprintf("%v", uuid), line.Text)
-	return true
+	// TODO -> Optimize string write since this operation is repeated for each log line
+	err = c.writeKafkaMessages(fmt.Sprintf("%v", uuid), line.Text)
+	if err != nil {
+		logger.Error("KafkaPublishMessageError", err.Error())
+		return err
+	}
+	return nil
 }

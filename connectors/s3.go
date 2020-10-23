@@ -34,12 +34,8 @@ func SetupS3Client(cfg S3ConnectorConfig) (*session.Session, *s3.S3) {
 	return sessionPtr, client
 }
 
-func (conn S3Connector) Open() {
-	logger.Info("Starting S3 connector ...")
-}
-
 func (c S3Connector) Close() {
-	logger.Info("Closing S3 connector ...")
+	logger.Info("Closed S3 connector (no-op) ...")
 }
 
 // Parses a log line into a string map using the regex built from config
@@ -77,12 +73,12 @@ func (c S3Connector) s3PutObject(bucket string, fileKey string, line *tail.Line)
 }
 
 // TODO -> return (struct, err)
-func (c S3Connector) Send(line *tail.Line) bool {
+func (c S3Connector) Send(line *tail.Line) error {
 	t := time.Now()
 	uuid, err := uuid.NewV4()
 	if err != nil {
-		logger.Error("FailedCreatingUUID", "Failed generating UUID for S3 file, exiting Send function")
-		return false
+		logger.Error("CreateUuidError", err.Error())
+		return err
 	}
 	fileName := fmt.Sprintf("%s/%d-%02d-%02dT%02d-%02d-%02d-%v",
 		c.cfg.KeyPrefix,
@@ -91,7 +87,8 @@ func (c S3Connector) Send(line *tail.Line) bool {
 	_, err = c.s3PutObject(c.cfg.Bucket, fileName, line)
 	logger.Info(fmt.Sprintf("Sending file '%s' to S3 bucket '%s'", fileName, c.cfg.Bucket))
 	if err != nil {
-		return false
+		logger.Error("S3PutObjectError", err.Error())
+		return err
 	}
-	return true
+	return nil
 }
