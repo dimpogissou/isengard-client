@@ -79,7 +79,7 @@ func TestWriteToKafkaTopic(t *testing.T) {
 	}
 
 	connector := KafkaConnector{cfg: cfg, writer: SetupKafkaConnection(cfg.Host, cfg.Port, cfg.Topic)}
-	defer CloseKafkaConnection(connector.writer)
+	defer connector.Close()
 
 	line := tail.Line{Text: testMessage}
 

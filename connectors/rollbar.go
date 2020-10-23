@@ -9,12 +9,9 @@ import (
 
 type RollbarConnector struct{ cfg RollbarConnectorConfig }
 
-func (c RollbarConnector) Open() {
-	logger.Info("Starting Rollbar connector ...")
-}
 func (c RollbarConnector) Close() {}
 
-func (c RollbarConnector) Send(line *tail.Line) bool {
+func (c RollbarConnector) Send(line *tail.Line) error {
 	logger.Info(fmt.Sprintf("Sending line to Rollbar --> %v", line))
-	return true
+	return nil
 }

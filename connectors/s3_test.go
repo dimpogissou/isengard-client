@@ -125,19 +125,16 @@ func TestWriteToS3(t *testing.T) {
 	}
 	session, client := SetupS3Client(cfg)
 	connector := S3Connector{cfg: cfg, session: session, client: client}
+	defer connector.Close()
 
 	// Create test S3 bucket and defer its deletion
 	createS3Bucket(connector.client, testBucket)
 	defer deleteFilesAndBucket(connector.client, testBucket, testKeyPrefix)
 
-	// No-op at the moment
-	connector.Open()
-	defer connector.Close()
-
 	// Send lines to test s3 bucket
 	line := tail.Line{Text: testString}
 	for i := 0; i < nFiles; i++ {
-		if connector.Send(&line) != true {
+		if connector.Send(&line) != nil {
 			t.Errorf("S3 connector Send function failed")
 		}
 	}

@@ -36,16 +36,22 @@ func main() {
 	signal.Notify(sigChannel, os.Interrupt, syscall.SIGTERM)
 
 	// Create and start all connectors, and defer teardown operations
+	// TODO -> Also listen for sigChannel here and return so deferred functions are executed on interrupt
 	conns := connectors.GenerateConnectors(cfg)
 	for _, c := range conns {
-		c.Open()
 		defer c.Close()
 	}
 
 	// Tails all log files in directory and sends data to configured targets
 	for line := range tailing.TailDirectory(cfg.Directory, logsChannel, sigChannel) {
 		for _, conn := range conns {
-			go conn.Send(line)
+			go func(c connectors.ConnectorInterface) {
+				err := c.Send(line)
+				if err != nil {
+					// TODO -> Implement fallback logic
+					logger.Error("SendError", err.Error())
+				}
+			}(conn)
 		}
 	}
 }

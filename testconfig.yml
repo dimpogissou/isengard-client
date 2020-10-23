@@ -32,8 +32,8 @@ RollbarConnectors:
 KafkaConnectors:
   - Name: testKafkaConnector
     Type: kafka
-    Host: localhost
-    Port: 9092
+    Host: kafka-cluster
+    Port: 19092
     Topic: test-kafka-topic
     Levels:
       - DEBUG
