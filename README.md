@@ -6,14 +6,16 @@ A logging files tail-and-dispatch client written in Go
 ## Functionalities
 - [ ] Design error switch to ensure storage, alerting and execution continuation on connector.Send failures 
 - [x] Add connectors to config
-- [x] Add s3 connector
-- [ ] Add rollbar connector
+- [x] Add S3 connector
+- [ ] Add Kinesis connector
+- [ ] Add Rollbar connector
 - [x] Add kafka connector
 - [ ] Add Datadog client and metrics
 - [ ] Add JSON logs support
 - [ ] Add log file name pattern
 - [ ] Add parsing config validation (WIP)
 - [x] Unify logging
+- [ ] Optimize string writes for line-level logging with bytes buffer
 - [ ] Add batch mode for S3/Kafka connectors
 
 ## Code quality
