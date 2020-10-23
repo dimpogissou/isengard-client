@@ -63,7 +63,7 @@ func TestWriteToKafkaTopic(t *testing.T) {
 
 	host := os.Getenv("KAFKA_HOST")
 	port := os.Getenv("KAFKA_PORT")
-	topic := os.Getenv("KAFKA_TOPIC")
+	topic := "integration-test-topic"
 	testMessage := "Test message"
 	partition := 0
 	createTopic(host, port, topic, partition)

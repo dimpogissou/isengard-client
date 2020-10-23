@@ -108,7 +108,7 @@ func TestWriteToS3(t *testing.T) {
 	testEndpoint := fmt.Sprintf("%s:%s", localstackEndpoint, localstackS3Port)
 	testRegion := os.Getenv("AWS_DEFAULT_REGION")
 
-	const testBucket = "local-test-bucket"
+	const testBucket = "integration-test-bucket"
 	const testKeyPrefix = "some/test/key"
 	const testString = "Log line"
 	const nFiles = 5
