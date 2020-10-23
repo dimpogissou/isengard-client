@@ -4,18 +4,19 @@ A logging files tail-and-dispatch client written in Go
 # To do
 
 ## Functionalities
-- [ ] Design error switch to ensure storage, alerting and execution continuation on connector.Send() failures 
-- [ ] Add parsing config validation (WIP)
-- [x] Add connectors to config
-- [x] Add s3 connector
+- [ ] Ensure all connectors are closed in main in case of interruption signal
 - [ ] Add kinesis connector
 - [ ] Add rollbar connector
-- [x] Add basic kafka connector
+- [ ] Add failover function to ensure storage, alerting and execution continuation on connector.Send() failures (WIP)
+- [ ] Add parsing config validation (WIP)
+- [ ] Add batch mode for S3/Kafka connectors
 - [ ] Add Datadog client and metrics
 - [ ] Add JSON logs support
 - [ ] Add log file name pattern
+- [x] Add connectors to config
+- [x] Add s3 connector
 - [x] Unify logging
-- [ ] Add batch mode for S3/Kafka connectors
+- [x] Add basic kafka connector
 
 ## Code quality
 - [x] Replace bool by error in connector.Send return type and pass the handling to main so that the complete application flow can be read and understood from main.go 
@@ -28,9 +29,9 @@ A logging files tail-and-dispatch client written in Go
 - [x] Restructure project
 - [x] Dockerise app
 - [x] Docker-compose test configuration
-- [x] Makefile 
+- [x] Makefile
+- [x] Setup test coverage report 
 - [ ] Setup CI
-- [ ] Setup test coverage report
 - [ ] Add Kafka broker, schema registry, introduce producer groups
 
 ## Tests 
