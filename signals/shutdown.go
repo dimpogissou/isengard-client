@@ -9,6 +9,7 @@ import (
 	"github.com/hpcloud/tail"
 )
 
+// Closes logs channel, connectors, and tails on interruption signals
 func CloseResourcesOnTerm(sigCh chan os.Signal, logsCh chan *tail.Line, connectors []connectors.ConnectorInterface, tails []*tail.Tail) {
 	<-sigCh
 	for _, c := range connectors {

@@ -8,6 +8,7 @@ import (
 	"github.com/hpcloud/tail"
 )
 
+// Collects file names in provided directory as an array of strings
 func getFileNamesInDir(dir string) []string {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
@@ -20,6 +21,7 @@ func getFileNamesInDir(dir string) []string {
 	return paths
 }
 
+// Starts tailing a file at provided path
 func tailFile(path string) (*tail.Tail, error) {
 
 	logger.Info(fmt.Sprintf("Start tailing file %s", path))
@@ -29,6 +31,7 @@ func tailFile(path string) (*tail.Tail, error) {
 	return t, err
 }
 
+// Starts tailing all files in provided directory
 func InitTailsFromDir(dir string) []*tail.Tail {
 
 	var files = getFileNamesInDir(dir)
@@ -45,6 +48,7 @@ func InitTailsFromDir(dir string) []*tail.Tail {
 	return tails
 }
 
+// Routine tailing a file and sending lines to logs channel
 func SendLines(t *tail.Tail, logCh chan *tail.Line) {
 	for line := range t.Lines {
 		logCh <- line
