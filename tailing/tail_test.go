@@ -47,7 +47,6 @@ func testTeardown(dir string) {
 // Core test method of tailing functionality. Creates a test directory, starts tailing it and asserts generated log lines are correctly received
 func TestTailDirectory(t *testing.T) {
 
-	// timeout := time.After(3 * time.Second)
 	done := make(chan bool)
 
 	timeoutSeconds := 6
@@ -65,7 +64,10 @@ func TestTailDirectory(t *testing.T) {
 
 	logs := make(chan *tail.Line)
 
-	go TailDirectory(testDir, logs, sig)
+	tails := InitTailsFromDir(testDir)
+	for _, t := range tails {
+		go SendLines(t, logs)
+	}
 
 	func() {
 		time.Sleep(1 * time.Second)

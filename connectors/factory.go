@@ -6,11 +6,11 @@ import (
 
 type ConnectorInterface interface {
 	Send(line *tail.Line) error
-	Close()
+	Close() error
 }
 
 // Create all connectors
-func GenerateConnectors(cfg YamlConfig) []ConnectorInterface {
+func CreateConnectors(cfg YamlConfig) []ConnectorInterface {
 
 	conns := []ConnectorInterface{}
 

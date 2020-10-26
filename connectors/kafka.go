@@ -50,8 +50,9 @@ type KafkaConnector struct {
 	writer *kafka.Writer
 }
 
-func (c KafkaConnector) Close() {
-	CloseKafkaConnection(c.writer)
+func (c KafkaConnector) Close() error {
+	err := CloseKafkaConnection(c.writer)
+	return err
 }
 
 func (c KafkaConnector) Send(line *tail.Line) error {
