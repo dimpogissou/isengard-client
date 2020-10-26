@@ -34,8 +34,9 @@ func SetupS3Client(cfg S3ConnectorConfig) (*session.Session, *s3.S3) {
 	return sessionPtr, client
 }
 
-func (c S3Connector) Close() {
+func (c S3Connector) Close() error {
 	logger.Info("Closed S3 connector (no-op) ...")
+	return nil
 }
 
 // Parses a log line into a string map using the regex built from config

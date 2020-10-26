@@ -8,6 +8,7 @@ import (
 
 	"github.com/dimpogissou/isengard-server/connectors"
 	"github.com/dimpogissou/isengard-server/logger"
+	"github.com/dimpogissou/isengard-server/signals"
 	"github.com/dimpogissou/isengard-server/tailing"
 	"github.com/hpcloud/tail"
 )
@@ -33,25 +34,23 @@ func main() {
 
 	// Create signal channel listening to interrupt and termination signals
 	sigChannel := make(chan os.Signal)
-	signal.Notify(sigChannel, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(sigChannel, os.Interrupt, os.Kill, syscall.SIGTERM)
 
 	// Create and start all connectors, and defer teardown operations
 	// TODO -> Also listen for sigChannel here and return so deferred functions are executed on interrupt
-	conns := connectors.GenerateConnectors(cfg)
-	for _, c := range conns {
-		defer c.Close()
+	conns := connectors.CreateConnectors(cfg)
+
+	// Create initial tails
+	tails := tailing.InitTailsFromDir(cfg.Directory)
+
+	// Listen to sigChannel and close all connectors and tails if received
+	go signals.CloseResourcesOnTerm(sigChannel, logsChannel, conns, tails)
+
+	// Tail existing files
+	for _, t := range tails {
+		go tailing.SendLines(t, logsChannel)
 	}
 
-	// Tails all log files in directory and sends data to configured targets
-	for line := range tailing.TailDirectory(cfg.Directory, logsChannel, sigChannel) {
-		for _, conn := range conns {
-			go func(c connectors.ConnectorInterface) {
-				err := c.Send(line)
-				if err != nil {
-					// TODO -> Implement fallback logic
-					logger.Error("SendError", err.Error())
-				}
-			}(conn)
-		}
-	}
+	// Routine reading logs lines and sending them to configured connectors
+	connectors.SendToConnectors(logsChannel, conns)
 }
