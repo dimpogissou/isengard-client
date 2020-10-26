@@ -5,6 +5,7 @@ import (
 	"github.com/hpcloud/tail"
 )
 
+// Reads log lines from channel and sends to all configured connectors
 func SendToConnectors(ch chan *tail.Line, conns []ConnectorInterface) {
 
 	for line := range ch {
