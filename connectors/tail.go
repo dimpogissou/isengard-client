@@ -1,4 +1,4 @@
-package tailing
+package connectors
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ func getFileNamesInDir(dir string) []string {
 }
 
 // Starts tailing a file at provided path
-func tailFile(path string) (*tail.Tail, error) {
+func createTail(path string) (*tail.Tail, error) {
 
 	logger.Info(fmt.Sprintf("Start tailing file %s", path))
 
@@ -38,7 +38,7 @@ func InitTailsFromDir(dir string) []*tail.Tail {
 	var tails = make([]*tail.Tail, 0)
 	for _, fileName := range files {
 		filePath := fmt.Sprintf("%s/%s", dir, fileName)
-		t, err := tailFile(filePath)
+		t, err := createTail(filePath)
 		if err != nil {
 			logger.Error("FailedTailingFile", fmt.Sprintf("Could not tail file [%s] due to -> %s", filePath, err))
 		} else {
@@ -49,8 +49,8 @@ func InitTailsFromDir(dir string) []*tail.Tail {
 }
 
 // Routine tailing a file and sending lines to logs channel
-func SendLines(t *tail.Tail, logCh chan *tail.Line) {
-	for line := range t.Lines {
-		logCh <- line
+func TailAndPublish(lines chan *tail.Line, publisher Publisher) {
+	for line := range lines {
+		publisher.Publish(line)
 	}
 }

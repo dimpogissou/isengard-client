@@ -1,7 +1,7 @@
 .PHONY : test restart restartd kafka-setup s3-setup setup
 
 test:
-	docker exec -w /build isengard go test -v ./connectors ./tailing -cover
+	docker exec -w /build isengard go test -v ./connectors -cover
 
 restart:
 	docker-compose rm -svf && docker-compose down && docker-compose build && docker-compose up

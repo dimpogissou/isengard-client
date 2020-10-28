@@ -8,10 +8,13 @@ import (
 
 	"github.com/dimpogissou/isengard-server/connectors"
 	"github.com/dimpogissou/isengard-server/logger"
-	"github.com/dimpogissou/isengard-server/signals"
-	"github.com/dimpogissou/isengard-server/tailing"
 	"github.com/hpcloud/tail"
 )
+
+func waitForTerminationSignal(sigCh chan os.Signal) {
+	<-sigCh
+	logger.Info("Termination signal received, exiting...")
+}
 
 func main() {
 
@@ -29,28 +32,37 @@ func main() {
 	// Validate and loads config
 	cfg := connectors.ValidateAndLoadConfig(configPtr)
 
-	// Create logs channel receiving all tailed loglines from the target directory
-	logsChannel := make(chan *tail.Line)
-
 	// Create signal channel listening to interrupt and termination signals
 	sigChannel := make(chan os.Signal)
+	defer close(sigChannel)
 	signal.Notify(sigChannel, os.Interrupt, os.Kill, syscall.SIGTERM)
 
-	// Create and start all connectors, and defer teardown operations
-	// TODO -> Also listen for sigChannel here and return so deferred functions are executed on interrupt
+	// Create logs publisher
+	logsPublisher := connectors.Publisher{}
+
+	// Start all configured connectors
 	conns := connectors.CreateConnectors(cfg)
 
-	// Create initial tails
-	tails := tailing.InitTailsFromDir(cfg.Directory)
-
-	// Listen to sigChannel and close all connectors and tails if received
-	go signals.CloseResourcesOnTerm(sigChannel, logsChannel, conns, tails)
-
-	// Tail existing files
-	for _, t := range tails {
-		go tailing.SendLines(t, logsChannel)
+	// Subscribe to logsPublisher for each connector
+	for _, conn := range conns {
+		ch := make(chan *tail.Line)
+		defer close(ch)
+		defer conn.Close()
+		subscriber := connectors.Subscriber{
+			Channel:   ch,
+			Connector: conn,
+		}
+		logsPublisher.Subscribe(subscriber.Channel)
+		go subscriber.ListenToChannel()
 	}
 
-	// Routine reading logs lines and sending them to configured connectors
-	connectors.SendToConnectors(logsChannel, conns)
+	// Publish lines for each file in a separate thread
+	tails := connectors.InitTailsFromDir(cfg.Directory)
+	for _, t := range tails {
+		defer t.Stop()
+		go connectors.TailAndPublish(t.Lines, logsPublisher)
+	}
+
+	// Leave routines running until termination signal
+	waitForTerminationSignal(sigChannel)
 }
