@@ -153,7 +153,7 @@ func TestTailNewFiles(t *testing.T) {
 	// Add new file and ensure watcher picks it up and starts tailing it from start
 	go TailNewFiles(watcher, logsPublisher, sigCh)
 	testFile2 := createTestFile(testDir, fileName)
-	go sleepThenWriteToFile(testFile2, 1*time.Second, nLines, testLogLine)
+	sleepThenWriteToFile(testFile2, 1*time.Second, nLines, testLogLine)
 	go readAndAssertLines(t, subscriber, testLogLine, nLines, done)
 
 	select {
