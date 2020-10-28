@@ -1,4 +1,4 @@
-package tailing
+package connectors
 
 import (
 	"fmt"
@@ -44,6 +44,11 @@ func testTeardown(dir string) {
 	os.RemoveAll(dir)
 }
 
+type mockConnector struct{}
+
+func (c mockConnector) Send(t *tail.Line) error { return nil }
+func (c mockConnector) Close() error            { return nil }
+
 // Core test method of tailing functionality. Creates a test directory, starts tailing it and asserts generated log lines are correctly received
 func TestTailDirectory(t *testing.T) {
 
@@ -59,14 +64,20 @@ func TestTailDirectory(t *testing.T) {
 
 	var testLogLine = "[2020-10-07 20:56:47.375586 UTC][INFO][009] Log message"
 
-	sig := make(chan os.Signal)
-	defer close(sig)
+	sigCh := make(chan os.Signal)
+	defer close(sigCh)
 
-	logs := make(chan *tail.Line)
+	logsPublisher := Publisher{}
+	logsCh := make(chan *tail.Line)
+	subscriber := Subscriber{
+		Channel:   logsCh,
+		Connector: mockConnector{},
+	}
+	logsPublisher.Subscribe(subscriber.Channel)
 
 	tails := InitTailsFromDir(testDir)
 	for _, t := range tails {
-		go SendLines(t, logs)
+		go TailAndPublish(t.Lines, logsPublisher)
 	}
 
 	func() {
@@ -80,7 +91,7 @@ func TestTailDirectory(t *testing.T) {
 
 	go func() {
 		i := 0
-		for line := range logs {
+		for line := range subscriber.Channel {
 			i += 1
 			if line.Text != testLogLine {
 				t.Errorf("Log line tailing failed, got [%v], want [%v]", line.Text, testLogLine)
