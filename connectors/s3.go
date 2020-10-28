@@ -73,7 +73,6 @@ func (c S3Connector) s3PutObject(bucket string, fileKey string, line *tail.Line)
 	return r, nil
 }
 
-// TODO -> return (struct, err)
 func (c S3Connector) Send(line *tail.Line) error {
 	t := time.Now()
 	uuid, err := uuid.NewV4()

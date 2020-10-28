@@ -2,10 +2,13 @@ package connectors
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
+	"os"
 
 	"github.com/dimpogissou/isengard-server/logger"
 	"github.com/hpcloud/tail"
+	"gopkg.in/fsnotify.v1"
 )
 
 // Collects file names in provided directory as an array of strings
@@ -21,12 +24,12 @@ func getFileNamesInDir(dir string) []string {
 	return paths
 }
 
-// Starts tailing a file at provided path
-func createTail(path string) (*tail.Tail, error) {
+// Starts tailing a file at provided path, from start if whence = ?, from the end if whence = 2
+func createTail(path string, whence int) (*tail.Tail, error) {
 
 	logger.Info(fmt.Sprintf("Start tailing file %s", path))
 
-	t, err := tail.TailFile(path, tail.Config{Follow: true, MustExist: true, Location: &tail.SeekInfo{Offset: 0, Whence: 2}, ReOpen: true, Poll: true})
+	t, err := tail.TailFile(path, tail.Config{Follow: true, MustExist: true, Location: &tail.SeekInfo{Offset: 0, Whence: whence}, ReOpen: true, Poll: true})
 
 	return t, err
 }
@@ -38,7 +41,7 @@ func InitTailsFromDir(dir string) []*tail.Tail {
 	var tails = make([]*tail.Tail, 0)
 	for _, fileName := range files {
 		filePath := fmt.Sprintf("%s/%s", dir, fileName)
-		t, err := createTail(filePath)
+		t, err := createTail(filePath, io.SeekEnd)
 		if err != nil {
 			logger.Error("FailedTailingFile", fmt.Sprintf("Could not tail file [%s] due to -> %s", filePath, err))
 		} else {
@@ -53,4 +56,40 @@ func TailAndPublish(lines chan *tail.Line, publisher Publisher) {
 	for line := range lines {
 		publisher.Publish(line)
 	}
+}
+
+// Monitors and tails new files, returns on signal interruption
+func TailNewFiles(watcher *fsnotify.Watcher, logsPublisher Publisher, sigChan chan os.Signal) {
+
+	for {
+		select {
+		case event, ok := <-watcher.Events:
+			if !ok {
+				// TODO -> better logging
+				logger.Error("FatalWatcherError", "Watcher fatal error, running deferred ops and exiting...")
+				return
+			}
+			if event.Op&fsnotify.Create == fsnotify.Create {
+				// Tail new file from beginning of file
+				t, err := createTail(event.Name, io.SeekStart)
+				defer t.Stop()
+				if err != nil {
+					logger.Error("FailedTailingNewFile", err.Error())
+				} else {
+					go TailAndPublish(t.Lines, logsPublisher)
+				}
+			}
+		case err, ok := <-watcher.Errors:
+			logger.Error("GenericWatcherError", err.Error())
+			if !ok {
+				// TODO -> better logging
+				logger.Error("FatalWatcherError", "Watcher fatal error, running deferred ops and exiting...")
+				return
+			}
+		case <-sigChan:
+			logger.Info("Termination signal received, running deferred ops and exiting...")
+			return
+		}
+	}
+
 }

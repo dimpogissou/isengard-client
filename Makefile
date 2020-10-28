@@ -6,6 +6,9 @@ test:
 restart:
 	docker-compose rm -svf && docker-compose down && docker-compose build && docker-compose up
 
+stop:
+	docker-compose rm -svf && docker-compose down
+
 restartd:
 	docker-compose rm -svf && docker-compose down && docker-compose build && docker-compose up -d
 

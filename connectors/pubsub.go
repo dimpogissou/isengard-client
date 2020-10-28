@@ -22,8 +22,7 @@ func (p *Publisher) Publish(m *tail.Line) {
 }
 
 func (s *Subscriber) ListenToChannel() {
-	for {
-		data := <-s.Channel
+	for data := range s.Channel {
 		s.Connector.Send(data)
 	}
 }

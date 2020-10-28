@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -9,12 +10,8 @@ import (
 	"github.com/dimpogissou/isengard-server/connectors"
 	"github.com/dimpogissou/isengard-server/logger"
 	"github.com/hpcloud/tail"
+	"gopkg.in/fsnotify.v1"
 )
-
-func waitForTerminationSignal(sigCh chan os.Signal) {
-	<-sigCh
-	logger.Info("Termination signal received, exiting...")
-}
 
 func main() {
 
@@ -40,6 +37,17 @@ func main() {
 	// Create logs publisher
 	logsPublisher := connectors.Publisher{}
 
+	// Create FS events watcher detecting new files
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer watcher.Close()
+	err = watcher.Add(cfg.Directory)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// Start all configured connectors
 	conns := connectors.CreateConnectors(cfg)
 
@@ -63,6 +71,6 @@ func main() {
 		go connectors.TailAndPublish(t.Lines, logsPublisher)
 	}
 
-	// Leave routines running until termination signal
-	waitForTerminationSignal(sigChannel)
+	// Watch for new files added and start tailing them, return on interruption signal to execute deferred calls
+	connectors.TailNewFiles(watcher, logsPublisher, sigChannel)
 }
