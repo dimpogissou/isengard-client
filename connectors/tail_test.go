@@ -1,8 +1,6 @@
 package connectors
 
 import (
-	"fmt"
-	"log"
 	"os"
 	"syscall"
 	"testing"
@@ -18,46 +16,10 @@ func check(e error) {
 	}
 }
 
-// Create test file
-func createTestFile(dir string, fileName string) *os.File {
-
-	emptyFile, err := os.Create(fmt.Sprintf("%s/%s", dir, fileName))
-	check(err)
-
-	return emptyFile
-}
-
 // Cleanup test dir
 func testTeardown(dir string) {
 	// Delete directory and files
 	os.RemoveAll(dir)
-}
-
-type mockConnector struct{}
-
-func (c mockConnector) Send(t *tail.Line) error { return nil }
-func (c mockConnector) Close() error            { return nil }
-
-func sleepThenWriteToFile(file *os.File, duration time.Duration, nLines int, testLine string) {
-	time.Sleep(duration)
-	for _ = range make([]int, nLines) {
-		file.WriteString(testLine)
-		file.WriteString("\n")
-	}
-	file.Close()
-}
-
-func readAndAssertLines(t *testing.T, subscriber Subscriber, logLine string, nLines int, done chan bool) {
-	i := 0
-	for line := range subscriber.Channel {
-		i += 1
-		if line.Text != logLine {
-			t.Errorf("Log line tailing failed, got [%v], want [%v]", line.Text, logLine)
-		}
-		if i == nLines {
-			done <- true
-		}
-	}
 }
 
 // Creates a test directory and file, starts tailing it and asserts generated log lines are correctly received
@@ -139,14 +101,10 @@ func TestTailNewFiles(t *testing.T) {
 
 	// Create FS events watcher detecting new files
 	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		log.Fatal(err)
-	}
+	check(err)
 	defer watcher.Close()
 	err = watcher.Add(testDir)
-	if err != nil {
-		log.Fatal(err)
-	}
+	check(err)
 
 	// Create publisher/subscriber with mockConnector
 	logsPublisher := Publisher{}

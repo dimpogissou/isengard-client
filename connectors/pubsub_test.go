@@ -7,11 +7,6 @@ import (
 	"github.com/hpcloud/tail"
 )
 
-type mockConnector struct{}
-
-func (c mockConnector) Send(t *tail.Line) error { return nil }
-func (c mockConnector) Close() error            { return nil }
-
 func TestPubSub(t *testing.T) {
 
 	const timeoutSeconds = 3
