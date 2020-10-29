@@ -36,8 +36,6 @@ func TestPubSub(t *testing.T) {
 	}
 	logsPublisher.Subscribe(subscriber1.Channel)
 	logsPublisher.Subscribe(subscriber2.Channel)
-	go subscriber1.ListenToChannel()
-	go subscriber2.ListenToChannel()
 
 	// Create test log line
 	testLine := tail.Line{Text: "logMessage", Err: nil}
