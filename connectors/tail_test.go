@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"syscall"
 	"testing"
 	"time"
 
@@ -11,19 +12,13 @@ import (
 	"gopkg.in/fsnotify.v1"
 )
 
-const timeoutSeconds = 3
-
-const testDir = "./config_test_files"
-
-const testLogLine = "[2020-10-07 20:56:47.375586 UTC][INFO][009] Log message"
-
 func check(e error) {
 	if e != nil {
 		panic(e)
 	}
 }
 
-// Test setup function
+// Create test file
 func createTestFile(dir string, fileName string) *os.File {
 
 	emptyFile, err := os.Create(fmt.Sprintf("%s/%s", dir, fileName))
@@ -32,7 +27,7 @@ func createTestFile(dir string, fileName string) *os.File {
 	return emptyFile
 }
 
-// Test teardown function
+// Cleanup test dir
 func testTeardown(dir string) {
 	// Delete directory and files
 	os.RemoveAll(dir)
@@ -65,9 +60,16 @@ func readAndAssertLines(t *testing.T, subscriber Subscriber, logLine string, nLi
 	}
 }
 
-// Core test method of tailing functionality. Creates a test directory, starts tailing it and asserts generated log lines are correctly received
+// Creates a test directory and file, starts tailing it and asserts generated log lines are correctly received
 func TestTailDirectory(t *testing.T) {
 
+	const timeoutSeconds = 3
+
+	const testDir = "./config_test_files"
+
+	const testLogLine = "[2020-10-07 20:56:47.375586 UTC][INFO][009] Log message"
+
+	// Test specific const/vars
 	done := make(chan bool)
 	defer close(done)
 	const fileName = "test_file_1.txt"
@@ -99,6 +101,7 @@ func TestTailDirectory(t *testing.T) {
 	tails := InitTailsFromDir(testDir)
 	for _, t := range tails {
 		go TailAndPublish(t.Lines, logsPublisher)
+		defer t.Stop()
 	}
 
 	// Assert tailing of existing files works correctly
@@ -113,8 +116,16 @@ func TestTailDirectory(t *testing.T) {
 
 }
 
+// Creates a test directory, starts watcher, creates and writes to a new file and asserts generated log lines are correctly received
 func TestTailNewFiles(t *testing.T) {
 
+	const timeoutSeconds = 3
+
+	const testDir = "./config_test_files"
+
+	const testLogLine = "[2020-10-07 20:56:47.375586 UTC][INFO][009] Log message"
+
+	// Test specific const/vars
 	done := make(chan bool)
 	defer close(done)
 	const fileName = "test_file_2.txt"
@@ -160,6 +171,7 @@ func TestTailNewFiles(t *testing.T) {
 	case <-timeout:
 		t.Fatalf("Test timed out after %v seconds", timeoutSeconds)
 	case <-done:
+		sigCh <- syscall.SIGINT
 	}
 
 }

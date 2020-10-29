@@ -24,7 +24,7 @@ func getFileNamesInDir(dir string) []string {
 	return paths
 }
 
-// Starts tailing a file at provided path, from start if whence = ?, from the end if whence = 2
+// Starts tailing a file at provided path, from start if whence = 0, from the end if whence = 2
 func createTail(path string, whence int) (*tail.Tail, error) {
 
 	logger.Info(fmt.Sprintf("Start tailing file %s", path))
