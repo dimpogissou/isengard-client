@@ -1,6 +1,7 @@
 package connectors
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -65,8 +66,7 @@ func TailNewFiles(watcher *fsnotify.Watcher, logsPublisher Publisher, sigChan ch
 		select {
 		case event, ok := <-watcher.Events:
 			if !ok {
-				// TODO -> better logging
-				logger.Error("FatalWatcherError", "Watcher fatal error, running deferred ops and exiting...")
+				logger.CheckErrAndLog(errors.New("Received fatal error from watcher.Events channel"), "WatcherError", "Error occured in filewatching routine")
 				return
 			}
 			if event.Op&fsnotify.Create == fsnotify.Create {
@@ -74,16 +74,15 @@ func TailNewFiles(watcher *fsnotify.Watcher, logsPublisher Publisher, sigChan ch
 				t, err := createTail(event.Name, io.SeekStart)
 				defer t.Stop()
 				if err != nil {
-					logger.Error("FailedTailingNewFile", err.Error())
+					logger.CheckErrAndLog(err, "FailedTailingNewFile", fmt.Sprintf("Error occured at tail creation for %s", event.Name))
 				} else {
 					go TailAndPublish(t.Lines, logsPublisher)
 				}
 			}
 		case err, ok := <-watcher.Errors:
-			logger.Error("GenericWatcherError", err.Error())
+			logger.CheckErrAndLog(err, "ReceivedWatcherError", fmt.Sprintf("Received error from watcher.Errors channel"))
 			if !ok {
-				// TODO -> better logging
-				logger.Error("FatalWatcherError", "Watcher fatal error, running deferred ops and exiting...")
+				logger.CheckErrAndLog(err, "FatalWatcherError", fmt.Sprintf("Received fatal error from watcher.Errors channel"))
 				return
 			}
 		case <-sigChan:

@@ -220,13 +220,13 @@ func readConfig(path string) YamlConfig {
 
 	// If error at file read, log and stop execution
 	if readErr != nil {
-		logger.Error("CannotReadConfigFile", fmt.Sprintf("Could not read YAML configuration at %s due to: %s", path, readErr))
+		logger.CheckErrAndPanic(readErr, "FailedReadingConfigFile", fmt.Sprintf("Could not read YAML configuration at %s", path))
 	}
 
 	// If error at file parsing, log and stop
 	parseErr := yaml.Unmarshal(data, &conf)
 	if parseErr != nil {
-		logger.Error("CannotParseConfigFile", fmt.Sprintf("Error occurred while parsing YAML configuration file: %v", parseErr))
+		logger.CheckErrAndPanic(parseErr, "FailedReadingConfigFile", "Error occurred while parsing YAML configuration file")
 	}
 
 	return conf
@@ -244,8 +244,6 @@ func BuildRegex(cfg YamlConfig) *regexp.Regexp {
 	// Interpolate subpatterns in main pattern, compile regex
 	pattern := fmt.Sprintf(cfg.LogPattern, subPatterns...)
 	regex := regexp.MustCompile(pattern)
-
-	fmt.Printf("Successfully concatenated log line regular expression --> %s\n", pattern)
 
 	return regex
 
@@ -265,11 +263,7 @@ func ValidateAndLoadConfig(path *string) YamlConfig {
 
 	cfg := readConfig(*path)
 	err := validateConfig(cfg)
-
-	if err != nil {
-		logger.Error("InvalidConfiguration", fmt.Sprintf("Configuration validation failed due to: %v", err))
-		os.Exit(1)
-	}
+	logger.CheckErrAndPanic(err, "FailedValidatingConfigFile", fmt.Sprintf("Configuration file validation failed for %s", *path))
 
 	return cfg
 

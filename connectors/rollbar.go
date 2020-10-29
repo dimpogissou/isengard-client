@@ -9,6 +9,10 @@ import (
 
 type RollbarConnector struct{ cfg RollbarConnectorConfig }
 
+func (c RollbarConnector) GetName() string {
+	return c.cfg.Name
+}
+
 func (c RollbarConnector) Close() error {
 	return nil
 }

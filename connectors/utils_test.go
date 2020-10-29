@@ -12,6 +12,7 @@ import (
 // Mock Connector implementing ConnectorInterface
 type mockConnector struct{}
 
+func (c mockConnector) GetName() string         { return "mockConnector" }
 func (c mockConnector) Send(t *tail.Line) error { return nil }
 func (c mockConnector) Close() error            { return nil }
 

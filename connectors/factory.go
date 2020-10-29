@@ -5,6 +5,7 @@ import (
 )
 
 type ConnectorInterface interface {
+	GetName() string
 	Send(line *tail.Line) error
 	Close() error
 }

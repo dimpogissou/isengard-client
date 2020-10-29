@@ -21,6 +21,10 @@ type S3Connector struct {
 	cfg     S3ConnectorConfig
 }
 
+func (c S3Connector) GetName() string {
+	return c.cfg.Name
+}
+
 // Sets up S3 client
 func SetupS3Client(cfg S3ConnectorConfig) (*session.Session, *s3.S3) {
 	sessionPtr := session.Must(session.NewSession(&aws.Config{

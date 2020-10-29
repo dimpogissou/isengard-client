@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -26,7 +25,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Validate and loads config
+	// Validate and loads config, panics if error
 	cfg := connectors.ValidateAndLoadConfig(configPtr)
 
 	// Create signal channel listening to interrupt and termination signals
@@ -39,14 +38,10 @@ func main() {
 
 	// Create FS events watcher detecting new files
 	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		log.Fatal(err)
-	}
+	logger.CheckErrAndPanic(err, "FailedCreatingWatcher", "Failed creating filesystem events watcher")
 	defer watcher.Close()
 	err = watcher.Add(cfg.Directory)
-	if err != nil {
-		log.Fatal(err)
-	}
+	logger.CheckErrAndPanic(err, "FailedWatchingDirectory", "Failed adding directory to watcher")
 
 	// Start all configured connectors
 	conns := connectors.CreateConnectors(cfg)
