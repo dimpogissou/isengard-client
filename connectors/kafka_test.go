@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/dimpogissou/isengard-server/config"
 	"github.com/dimpogissou/isengard-server/logger"
 	"github.com/hpcloud/tail"
 	"github.com/segmentio/kafka-go"
@@ -69,7 +70,7 @@ func TestWriteToKafkaTopic(t *testing.T) {
 	createTopic(host, port, topic, partition)
 
 	// Create test S3 bucket
-	cfg := KafkaConnectorConfig{
+	cfg := config.KafkaConnectorConfig{
 		Name:   "testKafkaConnector",
 		Type:   "kafka",
 		Levels: []string{"INFO", "DEBUG", "WARN", "ERROR"},

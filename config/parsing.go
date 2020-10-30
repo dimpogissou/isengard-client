@@ -1,4 +1,4 @@
-package connectors
+package config
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var SupportedConnectors = []string{"s3", "rollbar", "kafka"}
+var supportedConnectors = []string{"s3", "rollbar", "kafka"}
 var supportedLevels = []string{"DEBUG", "INFO", "WARNING", "WARN", "ERROR"}
 
 // YAML configuration structs
@@ -34,93 +34,24 @@ type ConnectorConfig interface {
 	getName() string
 	getType() string
 	getLevels() []string
+	validate() error
 }
 
-// S3 connector configuration
-type S3ConnectorConfig struct {
-	Name      string   `yaml:"Name"`
-	Endpoint  string   `yaml:"Endpoint"`
-	KeyPrefix string   `yaml:"KeyPrefix"`
-	Bucket    string   `yaml:"Bucket"`
-	Region    string   `yaml:"Region"`
-	Type      string   `yaml:"Type"`
-	Levels    []string `yaml:"Levels"`
-}
+func getConnectorsConfigs(cfg YamlConfig) []ConnectorConfig {
 
-func (config S3ConnectorConfig) getName() string {
-	return config.Name
-}
-
-func (config S3ConnectorConfig) getType() string {
-	return config.Type
-}
-
-func (config S3ConnectorConfig) getLevels() []string {
-	return config.Levels
-}
-
-func validateS3ConnectorsFields(connector S3ConnectorConfig) error {
-	if missingFields(connector.Endpoint, connector.KeyPrefix, connector.Bucket, connector.Region) {
-		return errors.New(
-			fmt.Sprintf("Missing field(s) in S3 connector config '%s': endpoint = %s, keyprefix = %s, bucket = %s, region = %s",
-				connector.Name, connector.Endpoint, connector.KeyPrefix, connector.Bucket, connector.Region))
+	connectorsConfigs := []ConnectorConfig{}
+	for _, connCfg := range cfg.S3Connectors {
+		connectorsConfigs = append(connectorsConfigs, connCfg)
 	}
-	return nil
-}
-
-// Rollbar connector configuration
-type RollbarConnectorConfig struct {
-	Name   string   `yaml:"Name"`
-	Type   string   `yaml:"Type"`
-	Url    string   `yaml:"Url"`
-	Levels []string `yaml:"Levels"`
-}
-
-func (config RollbarConnectorConfig) getName() string {
-	return config.Name
-}
-
-func (config RollbarConnectorConfig) getType() string {
-	return config.Type
-}
-
-func (config RollbarConnectorConfig) getLevels() []string {
-	return config.Levels
-}
-
-func validateRollbarConnectorsFields(connector RollbarConnectorConfig) error {
-	return nil
-}
-
-// Kafka connector configuration
-type KafkaConnectorConfig struct {
-	Name   string   `yaml:"Name"`
-	Type   string   `yaml:"Type"`
-	Host   string   `yaml:"Host"`
-	Port   string   `yaml:"Port"`
-	Topic  string   `yaml:"Topic"`
-	Levels []string `yaml:"Levels"`
-}
-
-func (config KafkaConnectorConfig) getName() string {
-	return config.Name
-}
-
-func (config KafkaConnectorConfig) getType() string {
-	return config.Type
-}
-
-func (config KafkaConnectorConfig) getLevels() []string {
-	return config.Levels
-}
-
-func validateKafkaConnectorsFields(connector KafkaConnectorConfig) error {
-	if missingFields(connector.Host, connector.Port, connector.Topic) {
-		return errors.New(
-			fmt.Sprintf("Missing field(s) in S3 connector config '%s': host = %s, port = %s, topic = %s",
-				connector.Name, connector.Host, connector.Port, connector.Topic))
+	for _, connCfg := range cfg.KafkaConnectors {
+		connectorsConfigs = append(connectorsConfigs, connCfg)
 	}
-	return nil
+	for _, connCfg := range cfg.RollbarConnectors {
+		connectorsConfigs = append(connectorsConfigs, connCfg)
+	}
+
+	return connectorsConfigs
+
 }
 
 // Runs complete configuration validation steps and returns eventual errors
@@ -143,40 +74,16 @@ func validateConfig(cfg YamlConfig) error {
 		return errors.New("YAML configuration missing required 'LogPattern' key, exiting")
 	}
 
-	for _, connector := range cfg.S3Connectors {
+	connectorsConfigs := getConnectorsConfigs(cfg)
+
+	for _, connCfg := range connectorsConfigs {
 		// Assert connectors have valid common fields values
-		err := validateConnectorsCommonFields(connector)
+		err := validateConnectorsCommonFields(connCfg)
 		if err != nil {
 			return err
 		}
 		// Assert connectors have valid S3 connector fields
-		err = validateS3ConnectorsFields(connector)
-		if err != nil {
-			return err
-		}
-	}
-
-	for _, connector := range cfg.RollbarConnectors {
-		// Assert connectors have valid common fields values
-		err := validateConnectorsCommonFields(connector)
-		if err != nil {
-			return err
-		}
-		// Assert connectors have valid Rollbar connector fields
-		err = validateRollbarConnectorsFields(connector)
-		if err != nil {
-			return err
-		}
-	}
-
-	for _, connector := range cfg.KafkaConnectors {
-		// Assert connectors have valid common fields values
-		err := validateConnectorsCommonFields(connector)
-		if err != nil {
-			return err
-		}
-		// Assert connectors have valid Kafka connector fields
-		err = validateKafkaConnectorsFields(connector)
+		err = connCfg.validate()
 		if err != nil {
 			return err
 		}
@@ -201,7 +108,7 @@ func validateConnectorsCommonFields(connector ConnectorConfig) error {
 	if missingFields(connector.getName(), connector.getType()) {
 		return errors.New(fmt.Sprintf("Missing field in connector config: %v", connector))
 	}
-	if !stringInSlice(connector.getType(), SupportedConnectors) {
+	if !stringInSlice(connector.getType(), supportedConnectors) {
 		return errors.New(fmt.Sprintf("Invalid connector type: %s", connector.getType()))
 	}
 	for _, level := range connector.getLevels() {

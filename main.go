@@ -6,8 +6,11 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/dimpogissou/isengard-server/config"
 	"github.com/dimpogissou/isengard-server/connectors"
 	"github.com/dimpogissou/isengard-server/logger"
+	"github.com/dimpogissou/isengard-server/observer"
+	"github.com/dimpogissou/isengard-server/tailing"
 	"github.com/hpcloud/tail"
 	"gopkg.in/fsnotify.v1"
 )
@@ -26,7 +29,7 @@ func main() {
 	}
 
 	// Validate and loads config, panics if error
-	cfg := connectors.ValidateAndLoadConfig(configPtr)
+	cfg := config.ValidateAndLoadConfig(configPtr)
 
 	// Create signal channel listening to interrupt and termination signals
 	sigChannel := make(chan os.Signal)
@@ -34,7 +37,7 @@ func main() {
 	signal.Notify(sigChannel, os.Interrupt, os.Kill, syscall.SIGTERM)
 
 	// Create logs publisher
-	logsPublisher := connectors.Publisher{}
+	logsPublisher := observer.Publisher{}
 
 	// Create FS events watcher detecting new files
 	watcher, err := fsnotify.NewWatcher()
@@ -51,7 +54,7 @@ func main() {
 		ch := make(chan *tail.Line)
 		defer close(ch)
 		defer conn.Close()
-		subscriber := connectors.Subscriber{
+		subscriber := observer.Subscriber{
 			Channel:   ch,
 			Connector: conn,
 		}
@@ -60,12 +63,12 @@ func main() {
 	}
 
 	// Publish lines for each file in a separate thread
-	tails := connectors.InitTailsFromDir(cfg.Directory)
+	tails := tailing.InitTailsFromDir(cfg.Directory)
 	for _, t := range tails {
 		defer t.Stop()
-		go connectors.TailAndPublish(t.Lines, logsPublisher)
+		go tailing.TailAndPublish(t.Lines, logsPublisher)
 	}
 
 	// Watch for new files added and start tailing them, return on interruption signal to execute deferred calls
-	connectors.TailNewFiles(watcher, logsPublisher, sigChannel)
+	tailing.TailNewFiles(watcher, logsPublisher, sigChannel)
 }

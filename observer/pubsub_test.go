@@ -1,9 +1,11 @@
-package connectors
+package observer_test
 
 import (
 	"testing"
 
 	"github.com/dimpogissou/isengard-server/logger"
+	"github.com/dimpogissou/isengard-server/observer"
+	"github.com/dimpogissou/isengard-server/testutils"
 	"github.com/hpcloud/tail"
 )
 
@@ -17,20 +19,20 @@ func TestPubSub(t *testing.T) {
 
 	// Create publisher/subscribers with mockConnector
 	logger.Info("Creating publisher and subscribers ...")
-	logsPublisher := Publisher{}
+	logsPublisher := observer.Publisher{}
 
 	ch1 := make(chan *tail.Line)
-	conn1 := mockConnector{}
+	conn1 := testutils.MockConnector{}
 	defer close(ch1)
-	subscriber1 := Subscriber{
+	subscriber1 := observer.Subscriber{
 		Channel:   ch1,
 		Connector: conn1,
 	}
 
 	ch2 := make(chan *tail.Line)
-	conn2 := mockConnector{}
+	conn2 := testutils.MockConnector{}
 	defer close(ch2)
-	subscriber2 := Subscriber{
+	subscriber2 := observer.Subscriber{
 		Channel:   ch2,
 		Connector: conn2,
 	}

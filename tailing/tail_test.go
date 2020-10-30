@@ -1,4 +1,4 @@
-package connectors
+package tailing
 
 import (
 	"os"
@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dimpogissou/isengard-server/observer"
+	"github.com/dimpogissou/isengard-server/testutils"
 	"github.com/hpcloud/tail"
 	"gopkg.in/fsnotify.v1"
 )
@@ -44,18 +46,18 @@ func TestTailDirectory(t *testing.T) {
 	defer testTeardown(testDir)
 
 	// Create test file
-	testFile1 := createTestFile(testDir, fileName)
+	testFile1 := testutils.CreateTestFile(testDir, fileName)
 
 	// Create signal channel
 	sigCh := make(chan os.Signal)
 	defer close(sigCh)
 
 	// Create publisher/subscriber with mockConnector
-	logsPublisher := Publisher{}
+	logsPublisher := observer.Publisher{}
 	logsCh := make(chan *tail.Line)
-	subscriber := Subscriber{
+	subscriber := observer.Subscriber{
 		Channel:   logsCh,
-		Connector: mockConnector{},
+		Connector: testutils.MockConnector{},
 	}
 	logsPublisher.Subscribe(subscriber.Channel)
 
@@ -67,8 +69,8 @@ func TestTailDirectory(t *testing.T) {
 	}
 
 	// Assert tailing of existing files works correctly
-	go sleepThenWriteToFile(testFile1, 1*time.Second, nLines, testLogLine)
-	go readAndAssertLines(t, subscriber, testLogLine, nLines, done)
+	go testutils.SleepThenWriteToFile(testFile1, 1*time.Second, nLines, testLogLine)
+	go testutils.ReadAndAssertLines(t, subscriber, testLogLine, nLines, done)
 
 	select {
 	case <-timeout:
@@ -107,11 +109,11 @@ func TestTailNewFiles(t *testing.T) {
 	check(err)
 
 	// Create publisher/subscriber with mockConnector
-	logsPublisher := Publisher{}
+	logsPublisher := observer.Publisher{}
 	logsCh := make(chan *tail.Line)
-	subscriber := Subscriber{
+	subscriber := observer.Subscriber{
 		Channel:   logsCh,
-		Connector: mockConnector{},
+		Connector: testutils.MockConnector{},
 	}
 	logsPublisher.Subscribe(subscriber.Channel)
 
@@ -121,9 +123,9 @@ func TestTailNewFiles(t *testing.T) {
 
 	// Add new file and ensure watcher picks it up and starts tailing it from start
 	go TailNewFiles(watcher, logsPublisher, sigCh)
-	testFile2 := createTestFile(testDir, fileName)
-	sleepThenWriteToFile(testFile2, 1*time.Second, nLines, testLogLine)
-	go readAndAssertLines(t, subscriber, testLogLine, nLines, done)
+	testFile2 := testutils.CreateTestFile(testDir, fileName)
+	testutils.SleepThenWriteToFile(testFile2, 1*time.Second, nLines, testLogLine)
+	go testutils.ReadAndAssertLines(t, subscriber, testLogLine, nLines, done)
 
 	select {
 	case <-timeout:

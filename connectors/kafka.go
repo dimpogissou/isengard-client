@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/dimpogissou/isengard-server/config"
 	"github.com/dimpogissou/isengard-server/logger"
 	"github.com/hpcloud/tail"
 	uuid "github.com/nu7hatch/gouuid"
@@ -46,7 +47,7 @@ func (c KafkaConnector) writeKafkaMessages(key string, message string) error {
 }
 
 type KafkaConnector struct {
-	cfg    KafkaConnectorConfig
+	cfg    config.KafkaConnectorConfig
 	writer *kafka.Writer
 }
 

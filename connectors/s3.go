@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/dimpogissou/isengard-server/config"
 	"github.com/dimpogissou/isengard-server/logger"
 	"github.com/hpcloud/tail"
 	uuid "github.com/nu7hatch/gouuid"
@@ -18,7 +19,7 @@ import (
 type S3Connector struct {
 	session *session.Session
 	client  *s3.S3
-	cfg     S3ConnectorConfig
+	cfg     config.S3ConnectorConfig
 }
 
 func (c S3Connector) GetName() string {
@@ -26,7 +27,7 @@ func (c S3Connector) GetName() string {
 }
 
 // Sets up S3 client
-func SetupS3Client(cfg S3ConnectorConfig) (*session.Session, *s3.S3) {
+func SetupS3Client(cfg config.S3ConnectorConfig) (*session.Session, *s3.S3) {
 	sessionPtr := session.Must(session.NewSession(&aws.Config{
 		S3ForcePathStyle:              aws.Bool(true),
 		CredentialsChainVerboseErrors: aws.Bool(true),

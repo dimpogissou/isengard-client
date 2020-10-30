@@ -1,6 +1,7 @@
 package connectors
 
 import (
+	"github.com/dimpogissou/isengard-server/config"
 	"github.com/hpcloud/tail"
 )
 
@@ -11,7 +12,7 @@ type ConnectorInterface interface {
 }
 
 // Create all connectors
-func CreateConnectors(cfg YamlConfig) []ConnectorInterface {
+func CreateConnectors(cfg config.YamlConfig) []ConnectorInterface {
 
 	conns := []ConnectorInterface{}
 

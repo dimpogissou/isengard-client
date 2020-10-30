@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/dimpogissou/isengard-server/config"
 	"github.com/dimpogissou/isengard-server/logger"
 	"github.com/hpcloud/tail"
 )
@@ -114,7 +115,7 @@ func TestWriteToS3(t *testing.T) {
 	const nFiles = 5
 
 	// Create test S3 connector
-	cfg := S3ConnectorConfig{
+	cfg := config.S3ConnectorConfig{
 		Name:      "testS3Connector",
 		Type:      "s3",
 		Endpoint:  testEndpoint,

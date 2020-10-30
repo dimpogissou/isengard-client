@@ -1,4 +1,4 @@
-package connectors
+package tailing
 
 import (
 	"errors"
@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/dimpogissou/isengard-server/logger"
+	"github.com/dimpogissou/isengard-server/observer"
 	"github.com/hpcloud/tail"
 	"gopkg.in/fsnotify.v1"
 )
@@ -53,14 +54,14 @@ func InitTailsFromDir(dir string) []*tail.Tail {
 }
 
 // Routine tailing a file and sending lines to logs channel
-func TailAndPublish(lines chan *tail.Line, publisher Publisher) {
+func TailAndPublish(lines chan *tail.Line, publisher observer.Publisher) {
 	for line := range lines {
 		publisher.Publish(line)
 	}
 }
 
 // Monitors and tails new files, returns on signal interruption
-func TailNewFiles(watcher *fsnotify.Watcher, logsPublisher Publisher, sigChan chan os.Signal) {
+func TailNewFiles(watcher *fsnotify.Watcher, logsPublisher observer.Publisher, sigChan chan os.Signal) {
 
 	for {
 		select {

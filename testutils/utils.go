@@ -1,4 +1,4 @@
-package connectors
+package testutils
 
 import (
 	"fmt"
@@ -6,27 +6,29 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dimpogissou/isengard-server/logger"
+	"github.com/dimpogissou/isengard-server/observer"
 	"github.com/hpcloud/tail"
 )
 
 // Mock Connector implementing ConnectorInterface
-type mockConnector struct{}
+type MockConnector struct{}
 
-func (c mockConnector) GetName() string         { return "mockConnector" }
-func (c mockConnector) Send(t *tail.Line) error { return nil }
-func (c mockConnector) Close() error            { return nil }
+func (c MockConnector) GetName() string         { return "mockConnector" }
+func (c MockConnector) Send(t *tail.Line) error { return nil }
+func (c MockConnector) Close() error            { return nil }
 
 // Create test file
-func createTestFile(dir string, fileName string) *os.File {
+func CreateTestFile(dir string, fileName string) *os.File {
 
 	emptyFile, err := os.Create(fmt.Sprintf("%s/%s", dir, fileName))
-	check(err)
+	logger.CheckErrAndPanic(err, "FailedCreatingTestFile", "Unable to create test file")
 
 	return emptyFile
 }
 
 // Sleeps then writes to provided file
-func sleepThenWriteToFile(file *os.File, duration time.Duration, nLines int, testLine string) {
+func SleepThenWriteToFile(file *os.File, duration time.Duration, nLines int, testLine string) {
 	time.Sleep(duration)
 	for _ = range make([]int, nLines) {
 		file.WriteString(testLine)
@@ -37,7 +39,7 @@ func sleepThenWriteToFile(file *os.File, duration time.Duration, nLines int, tes
 
 // Reads lines from subscriber channel, asserts correct number, then sends true to bool channel.
 // Should be used with timeout as it will just hang if not enough records are received.
-func readAndAssertLines(t *testing.T, subscriber Subscriber, logLine string, nLines int, done chan bool) {
+func ReadAndAssertLines(t *testing.T, subscriber observer.Subscriber, logLine string, nLines int, done chan bool) {
 	i := 0
 	for line := range subscriber.Channel {
 		i += 1
