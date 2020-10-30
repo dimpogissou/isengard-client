@@ -1,6 +1,9 @@
-package connectors
+package observer
 
-import "github.com/hpcloud/tail"
+import (
+	"github.com/dimpogissou/isengard-server/connectors"
+	"github.com/hpcloud/tail"
+)
 
 type Publisher struct {
 	listeners []chan *tail.Line
@@ -8,7 +11,7 @@ type Publisher struct {
 
 type Subscriber struct {
 	Channel   chan *tail.Line
-	Connector ConnectorInterface
+	Connector connectors.ConnectorInterface
 }
 
 func (p *Publisher) Subscribe(c chan *tail.Line) {
@@ -22,8 +25,7 @@ func (p *Publisher) Publish(m *tail.Line) {
 }
 
 func (s *Subscriber) ListenToChannel() {
-	for {
-		data := <-s.Channel
+	for data := range s.Channel {
 		s.Connector.Send(data)
 	}
 }

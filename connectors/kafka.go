@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/dimpogissou/isengard-server/config"
 	"github.com/dimpogissou/isengard-server/logger"
 	"github.com/hpcloud/tail"
 	uuid "github.com/nu7hatch/gouuid"
@@ -24,7 +25,7 @@ func SetupKafkaConnection(host string, port string, topic string) *kafka.Writer 
 func CloseKafkaConnection(writer *kafka.Writer) error {
 
 	if err := writer.Close(); err != nil {
-		logger.Error("KafkaClosePublisherError:", err.Error())
+		logger.Error("FailedClosingKafkaPublisher", err.Error())
 		return err
 	}
 	logger.Info("Closed Kafka publisher ...")
@@ -46,8 +47,12 @@ func (c KafkaConnector) writeKafkaMessages(key string, message string) error {
 }
 
 type KafkaConnector struct {
-	cfg    KafkaConnectorConfig
+	cfg    config.KafkaConnectorConfig
 	writer *kafka.Writer
+}
+
+func (c KafkaConnector) GetName() string {
+	return c.cfg.Name
 }
 
 func (c KafkaConnector) Close() error {

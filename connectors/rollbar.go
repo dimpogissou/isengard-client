@@ -3,11 +3,16 @@ package connectors
 import (
 	"fmt"
 
+	"github.com/dimpogissou/isengard-server/config"
 	"github.com/dimpogissou/isengard-server/logger"
 	"github.com/hpcloud/tail"
 )
 
-type RollbarConnector struct{ cfg RollbarConnectorConfig }
+type RollbarConnector struct{ cfg config.RollbarConnectorConfig }
+
+func (c RollbarConnector) GetName() string {
+	return c.cfg.Name
+}
 
 func (c RollbarConnector) Close() error {
 	return nil

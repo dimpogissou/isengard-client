@@ -33,6 +33,25 @@ func Warn(alertCode string, msg string) {
 	log.Warning(fmt.Sprintf("[%s] %s", alertCode, msg))
 }
 
+func CheckWarnAndLog(err error, alertCode string, msg string) {
+	if err != nil {
+		log.Warning(fmt.Sprintf("[%s] %s - Error --> %s", alertCode, msg, err.Error()))
+	}
+}
+
 func Error(alertCode string, msg string) {
 	log.Error(fmt.Sprintf("[%s] %s", alertCode, msg))
+}
+
+func CheckErrAndLog(err error, alertCode string, msg string) {
+	if err != nil {
+		log.Error(fmt.Sprintf("[%s] %s - Error --> %s", alertCode, msg, err.Error()))
+	}
+}
+
+func CheckErrAndPanic(err error, alertCode string, msg string) {
+	if err != nil {
+		log.Error(fmt.Sprintf("[%s] %s - Error --> %s", alertCode, msg, err.Error()))
+		panic(err.Error)
+	}
 }

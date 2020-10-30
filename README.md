@@ -4,15 +4,15 @@ A logging files tail-and-dispatch client written in Go
 # To do
 
 ## Functionalities
-- [ ] Ensure all connectors are closed in main in case of interruption signal
 - [ ] Add kinesis connector
 - [ ] Add rollbar connector
-- [ ] Add failover function to ensure storage, alerting and execution continuation on connector.Send() failures (WIP)
+- [ ] Add failover function to ensure storage, alerting and execution continuation 
 - [ ] Add parsing config validation (WIP)
 - [ ] Add batch mode for S3/Kafka connectors
 - [ ] Add Datadog client and metrics
 - [ ] Add JSON logs support
 - [ ] Add log file name pattern
+- [x] Ensure all resources are closed in case of interruption signal
 - [x] Add connectors to config
 - [x] Add s3 connector
 - [x] Unify logging

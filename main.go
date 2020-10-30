@@ -6,15 +6,14 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/dimpogissou/isengard-server/config"
 	"github.com/dimpogissou/isengard-server/connectors"
 	"github.com/dimpogissou/isengard-server/logger"
+	"github.com/dimpogissou/isengard-server/observer"
+	"github.com/dimpogissou/isengard-server/tailing"
 	"github.com/hpcloud/tail"
+	"gopkg.in/fsnotify.v1"
 )
-
-func waitForTerminationSignal(sigCh chan os.Signal) {
-	<-sigCh
-	logger.Info("Termination signal received, exiting...")
-}
 
 func main() {
 
@@ -29,8 +28,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Validate and loads config
-	cfg := connectors.ValidateAndLoadConfig(configPtr)
+	// Validate and loads config, panics if error
+	cfg := config.ValidateAndLoadConfig(configPtr)
 
 	// Create signal channel listening to interrupt and termination signals
 	sigChannel := make(chan os.Signal)
@@ -38,7 +37,14 @@ func main() {
 	signal.Notify(sigChannel, os.Interrupt, os.Kill, syscall.SIGTERM)
 
 	// Create logs publisher
-	logsPublisher := connectors.Publisher{}
+	logsPublisher := observer.Publisher{}
+
+	// Create FS events watcher detecting new files
+	watcher, err := fsnotify.NewWatcher()
+	logger.CheckErrAndPanic(err, "FailedCreatingWatcher", "Failed creating filesystem events watcher")
+	defer watcher.Close()
+	err = watcher.Add(cfg.Directory)
+	logger.CheckErrAndPanic(err, "FailedWatchingDirectory", "Failed adding directory to watcher")
 
 	// Start all configured connectors
 	conns := connectors.CreateConnectors(cfg)
@@ -48,7 +54,7 @@ func main() {
 		ch := make(chan *tail.Line)
 		defer close(ch)
 		defer conn.Close()
-		subscriber := connectors.Subscriber{
+		subscriber := observer.Subscriber{
 			Channel:   ch,
 			Connector: conn,
 		}
@@ -57,12 +63,12 @@ func main() {
 	}
 
 	// Publish lines for each file in a separate thread
-	tails := connectors.InitTailsFromDir(cfg.Directory)
+	tails := tailing.InitTailsFromDir(cfg.Directory)
 	for _, t := range tails {
 		defer t.Stop()
-		go connectors.TailAndPublish(t.Lines, logsPublisher)
+		go tailing.TailAndPublish(t.Lines, logsPublisher)
 	}
 
-	// Leave routines running until termination signal
-	waitForTerminationSignal(sigChannel)
+	// Watch for new files added and start tailing them, return on interruption signal to execute deferred calls
+	tailing.TailNewFiles(watcher, logsPublisher, sigChannel)
 }
